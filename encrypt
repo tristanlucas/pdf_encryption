@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# Function to check if pdftk is installed, and install it if not
+install_pdftk() {
+  if ! command -v pdftk &> /dev/null; then
+    echo "pdftk could not be found, installing..."
+    sudo apt-get update
+    sudo apt-get install -y pdftk
+  else
+    echo "pdftk is already installed."
+  fi
+}
+
+# Ensure pdftk is installed
+install_pdftk
+
+# Prompt the user to select the book
+echo "Select the book to encrypt:"
+echo "1) yocto"
+echo "2) navi2"
+read -p "Enter the number (1 or 2): " book_choice
+
+# Set the input PDF file based on user choice
+if [ "$book_choice" -eq 1 ]; then
+  input_pdf="yocto.pdf"
+elif [ "$book_choice" -eq 2 ]; then
+  input_pdf="navi2.pdf"
+else
+  echo "Invalid choice. Exiting."
+  exit 1
+fi
+
+# Check if the input PDF exists
+if [ ! -f "$input_pdf" ]; then
+  echo "Input PDF file '$input_pdf' not found!"
+  exit 1
+fi
+
+# Directory to save password-protected PDFs
+output_dir="protected_pdfs"
+
+# Create the output directory if it doesn't exist
+mkdir -p "$output_dir"
+
+# Prompt the user for the output file name
+read -p "Enter the output file name (without extension): " output_file_name
+
+# Prompt the user for the user password
+read -sp "Enter the user password to encrypt the PDFs: " user_password
+echo
+
+# Default owner password
+owner_password="ROMdynamicsOrg"
+
+# Create the password-protected PDF
+output_pdf="$output_dir/${output_file_name}.pdf"
+pdftk "$input_pdf" output "$output_pdf" owner_pw "$owner_password" user_pw PROMPT <<< "$user_password"
+echo "Created password-protected PDF: $output_pdf"
+
+echo "Encryption has been processed."
+
